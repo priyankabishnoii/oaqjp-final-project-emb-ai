@@ -7,36 +7,12 @@ from emotionDetection.emotion_detection import emotion_detector
 
 class EmotionDetectorTests(unittest.TestCase):
     @patch("emotionDetection.emotion_detection.requests.post")
-    def test_returns_hard_coded_result_for_known_phrase(self, mock_post):
-        result = emotion_detector("I am really mad about this")
-
-        self.assertEqual(
-            result,
-            {
-                "anger": 1.0,
-                "disgust": 0.0,
-                "fear": 0.0,
-                "joy": 0.0,
-                "sadness": 0.0,
-                "dominant_emotion": "anger",
-            },
-        )
-        mock_post.assert_not_called()
-
-    @patch("emotionDetection.emotion_detection.requests.post")
-    def test_hard_coded_phrase_ignores_case_and_outer_whitespace(self, mock_post):
-        result = emotion_detector("  I AM REALLY MAD ABOUT THIS  ")
-
-        self.assertEqual(result["dominant_emotion"], "anger")
-        mock_post.assert_not_called()
-
-    @patch("emotionDetection.emotion_detection.requests.post")
-    def test_returns_scores_and_dominant_emotion(self, mock_post):
+    def test_known_phrase_uses_api_result(self, mock_post):
         emotion_scores = {
-            "anger": 0.01,
+            "anger": 0.9,
             "disgust": 0.02,
             "fear": 0.03,
-            "joy": 0.9,
+            "joy": 0.01,
             "sadness": 0.04,
         }
         mock_post.return_value.status_code = 200
@@ -44,9 +20,9 @@ class EmotionDetectorTests(unittest.TestCase):
             {"emotionPredictions": [{"emotion": emotion_scores}]}
         )
 
-        result = emotion_detector("I am glad this works.")
+        result = emotion_detector("I am really mad about this")
 
-        self.assertEqual(result["dominant_emotion"], "joy")
+        self.assertEqual(result["dominant_emotion"], "anger")
         for emotion, score in emotion_scores.items():
             self.assertEqual(result[emotion], score)
         mock_post.assert_called_once()
